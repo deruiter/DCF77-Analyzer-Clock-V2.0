@@ -28,4 +28,4 @@ DCF77-Analyzer-Clock
   although not many changes were made
   
   Erik de Ruiter
-  2014
+  2014-08
