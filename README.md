@@ -22,9 +22,10 @@ DCF77-Analyzer-Clock
   DCF and C++.
 
   If you enjoy exploring the Arduino and DCF77 as much as I did, maybe by using and/or learning from this
-  sketch, my goal is reached. :o)
+  sketch or PCB's, my goal is reached. :o)
 
-  USE PCB DESIGNS AT YOUR OWN RISK, I TESTED THE V1.0 BOARDS BUT NOT THE 1.1 REVISIONS
+  USE MY PCB DESIGNS AT YOUR OWN RISK, I TESTED THE V1.0 BOARDS BUT NOT THE 1.1 REVISIONS 
+  although not many changes were made
   
   Erik de Ruiter
   2014
