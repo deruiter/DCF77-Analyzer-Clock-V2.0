@@ -1,33 +1,42 @@
 /*
   This sketch is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-
-  This sketch is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-  :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :()
-
-  This is a sketch, aimed at people who are just beginning to discover the wonderful DCF77 / Radio Clock world.
-  The C++ code is far from optimized because I myself am an Arduino and C++ newbie! ;)
-  But in writing this code and learning a LOT from others, I gradually comprehended the inner workings of
-  DCF and C++.
-
-  If you enjoy exploring the Arduino and DCF77 as much as I did, maybe by using and/or learning from this
-  sketch, my goal is reached. :o)
-
-  Erik de Ruiter
-  2014
-
-
-*/
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
+ 
+ This sketch is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ 
+ You should have received a copy of the GNU Lesser General Public
+ License along with this library; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ 
+ :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :() :()
+ 
+ This is a sketch, aimed at people who are just beginning to discover the wonderful DCF77 / Radio Clock world.
+ The C++ code is far from optimized because I myself am an Arduino and C++ newbie! ;)
+ But in writing this code and learning a LOT from others, I gradually comprehended the inner workings of
+ DCF and C++.
+ 
+ If you enjoy exploring the Arduino and DCF77 as much as I did, maybe by using and/or learning from this
+ sketch, my goal is reached. :o)
+ 
+ Erik de Ruiter
+ 2014
+ 
+ Edit:
+ 2014-12-01 changed code to accomodate Adafruit Audio FX Sound Board for Chime sound
+ 
+ 
+ CREDITS:
+ I learned a lot from the work of Matthias Dalheimer and Thijs Elenbaas who made their own DCF77 decoders.
+ Without their work I would not have known where to start.
+ I ended up writing my own code (using bits and pieces of their ideas) so I could understand what is happening...
+ My code is far, very far from efficient or advanced but it does work and I know what is going on.
+ 
+ */
 
 //----------------------------------------------------------------------------------------------------------
 // Libraries
@@ -46,19 +55,19 @@
 //STREAMING.h .................................................... http://arduiniana.org/libraries/streaming/
 /*
 New users sometimes wonder why the “Arduino language” doesn’t provide the kind
-of concatenation or streaming operations they have become accustomed to in Java/VB/C#/C++, etc.
-    lcd << "GPS #" << gpsno << " date: " << day << "-" << month << "-" << year << endl;
-This library works for any class that derives from Print:
-    Serial << "Counter: " << counter;
-    lcd << "Temp: " << t.get_temperature() << " degrees";
-    my_pstring << "Hi Mom!" << endl;
-With the new library you can also use formatting manipulators like this:
-    Serial << "Byte value: " << _HEX(b) << endl;
-    lcd << "The key pressed was " << _BYTE(c) << endl;
-This syntax is familiar to many, is easy to read and learn, and, importantly, *** consumes no resources ***
-(Because the operator functions are essentially just inline aliases for their print() counterparts,
-no sketch gets larger or consumes more RAM as a result of their inclusion.)
-*/
+ of concatenation or streaming operations they have become accustomed to in Java/VB/C#/C++, etc.
+ lcd << "GPS #" << gpsno << " date: " << day << "-" << month << "-" << year << endl;
+ This library works for any class that derives from Print:
+ Serial << "Counter: " << counter;
+ lcd << "Temp: " << t.get_temperature() << " degrees";
+ my_pstring << "Hi Mom!" << endl;
+ With the new library you can also use formatting manipulators like this:
+ Serial << "Byte value: " << _HEX(b) << endl;
+ lcd << "The key pressed was " << _BYTE(c) << endl;
+ This syntax is familiar to many, is easy to read and learn, and, importantly, *** consumes no resources ***
+ (Because the operator functions are essentially just inline aliases for their print() counterparts,
+ no sketch gets larger or consumes more RAM as a result of their inclusion.)
+ */
 #include <Streaming.h>
 // OneWire lets you access 1-wire devices made by Maxim/Dallas,
 // such as DS18S20, DS18B20, DS1822 .............................. http://www.pjrc.com/teensy/td_libs_OneWire.html
@@ -75,24 +84,24 @@ OneWire  ds(8); // define Onewire instance DS on pin 8
 //----------------------------------------------------------------------------------------------------------
 /*
   clearDisplay(int addr) ........................................ clears the selected display
-  lc.shutdown(int addr, boolean) ................................ wake up the MAX72XX from power-saving mode (true = sleep, false = awake)
-  lc.setIntensity(int addr, value) .............................. set a medium brightness for the Leds (0=min - 15=max)
-  lc.setLed(int addr, int row, int col, boolean state) .......... switch on the led in row, column. remember that indices start at 0!
-  lc.setRow(int addr, int row, byte value) ...................... this function takes 3 arguments. example: lc.setRow(0,2,B10110000);
-  lc.setColumn(int addr, int col, byte value) ................... this function takes 3 arguments. example: lc.setColumn(0,5,B00001111);
-  lc.setDigit(int addr, int digit, byte value, boolean dp) ....... this function takes an argument of type byte and prints the corresponding digit on the specified column.
-                                                                  The range of valid values runs from 0..15. All values between 0..9 are printed as digits,
-                                                                  values between 10..15 are printed as their hexadecimal equivalent
-  lc.setChar(int addr, int digit, char value, boolean dp) ....... will display: 0 1 2 3 4 5 6 7 8 9 A B C D E F H L P; - . , _ <SPACE> (the blank or space char)
-
-pin 12/7 is connected to the DataIn
-pin 11/6 is connected to the CLK
-pin 10/5 is connected to CS/LOAD
-
-***** Please set the number of devices you have *****
-But the maximum default of 8 MAX72XX wil also work.
-LedConrol(DATAIN, CLOCK, CS/LOAD, NUMBER OF MAXIM CHIPS)
-*/
+ lc.shutdown(int addr, boolean) ................................ wake up the MAX72XX from power-saving mode (true = sleep, false = awake)
+ lc.setIntensity(int addr, value) .............................. set a medium brightness for the Leds (0=min - 15=max)
+ lc.setLed(int addr, int row, int col, boolean state) .......... switch on the led in row, column. remember that indices start at 0!
+ lc.setRow(int addr, int row, byte value) ...................... this function takes 3 arguments. example: lc.setRow(0,2,B10110000);
+ lc.setColumn(int addr, int col, byte value) ................... this function takes 3 arguments. example: lc.setColumn(0,5,B00001111);
+ lc.setDigit(int addr, int digit, byte value, boolean dp) ....... this function takes an argument of type byte and prints the corresponding digit on the specified column.
+ The range of valid values runs from 0..15. All values between 0..9 are printed as digits,
+ values between 10..15 are printed as their hexadecimal equivalent
+ lc.setChar(int addr, int digit, char value, boolean dp) ....... will display: 0 1 2 3 4 5 6 7 8 9 A B C D E F H L P; - . , _ <SPACE> (the blank or space char)
+ 
+ pin 12/7 is connected to the DataIn
+ pin 11/6 is connected to the CLK
+ pin 10/5 is connected to CS/LOAD
+ 
+ ***** Please set the number of devices you have *****
+ But the maximum default of 8 MAX72XX wil also work.
+ LedConrol(DATAIN, CLOCK, CS/LOAD, NUMBER OF MAXIM CHIPS)
+ */
 
 // lc is for the Maxim Common CATHODE displays
 LedControl lc = LedControl(12, 11, 10, 8, false); // Define pins for Maxim 72xx and how many 72xx we use
@@ -110,16 +119,20 @@ LedControl lc1 = LedControl(7, 6, 5, 1, true); // Define pins for Maxim 72xx and
 #define DCFSyncTime          1600     // defines 2000 ms pulse for end of sequence
 
 // define Arduino Pins
-#define BUZZER         A1             // Piezo buzzer on Analog port
-#define DCF_INTERRUPT  0	      // Interrupt number associated with pin
-#define DCF77PIN       2	      // Connection pin to DCF 77 device. Must be pin 2 or 3!
-#define CHIMEPIN       3              // switch CHIME ON/OFF
-#define DCF77SOUNDPIN  4              // switch DCF77 Sound ON/OFF
-#define TEMPRESETPIN   9              // Push button to reset min/max temp memory
+#define BUZZER         A1             // OUTPUT: Piezo buzzer on Analog port
+#define CHIMESWITCHPIN A2             // INPUT: Chime on/off switch
+#define CHIMEPIN       A3             // OUTPUT: Chime Activate     LOW=CHIME ON
+#define DCF_INTERRUPT   0             // Interrupt number associated with pin
+#define SPEAKERVOLPIN  13             // After power on, set the speaker volume of the Adafruit Adio Board via this pin
+#define DCF77PIN        2             // INPUT: Connection pin to DCF 77 device. Must be pin 2 or 3!
+#define NOTUSEDPIN      3             // INPUT: not used at this moment
+#define DCF77SOUNDPIN   4             // INPUT: Switch DCF77 Sound ON/OFF
+#define TEMPRESETPIN    9             // INPUT: Push button to reset min/max temp memory
+
 
 // define miscellaneous parameters
-#define DEBUG_FLOW     0              // 1 = show info about functions calls 
-#define DS1307_I2C_ADDRESS   0x68     // define the RTC I2C address
+#define DEBUG_FLOW          0         // 1 = show info about functions calls 
+#define DS1307_I2C_ADDRESS  0x68      // define the RTC I2C address
 
 // definition of Maxim 7219 display number sequence
 // first Maxim 7219 in 'daisychain' must be '0', next '1' etc.
@@ -139,15 +152,18 @@ LedControl lc1 = LedControl(7, 6, 5, 1, true); // Define pins for Maxim 72xx and
 #define MaximDcfTime       0
 
 // definition of display brighness levels
-#define BrightnessMaximLedRingOuter    1
-#define BrightnessMaximLedRingInner    1
-#define BrightnessMaximPeriodPulse     2
-#define BrightnessMaximWeek            3
-#define BrightnessMaximDate            9
-#define BrightnessMaximRtcTime         1
-#define BrightnessMaximLeds            6
-#define BrightnessMaximDcfTime         4
+#define BrightnessMaximLedRingOuter     1
+#define BrightnessMaximLedRingInner     1
+#define BrightnessMaximPeriodPulse      2
+#define BrightnessMaximWeek             3
+#define BrightnessMaximDate             9
+#define BrightnessMaximRtcTime          1
+#define BrightnessMaximLeds             6
+#define BrightnessMaximDcfTime          4
 #define BrightnessMaximBufferBitError  15
+
+// After power on, set the speaker volume of the Adafruit Adio Board via this pin
+#define SPEAKERVOLUME       12
 
 // definition of Status/Error Led's. Use division and modulo to seperate Row/Col values!!
 // to lit a LED you need a ROW and COLUMN value.
@@ -155,28 +171,28 @@ LedControl lc1 = LedControl(7, 6, 5, 1, true); // Define pins for Maxim 72xx and
 // and BFLed%10 results in the value '3' (column)
 
 /* Row/Col LED numbers of Maxim 7219 chip
-           Row  Col
-Sunday      0    0
-Monday      0    1
-Tuesday     0    2
-Wednesday   0    3
-Thursday    0    4
-Friday      0    5
-Saturday    0    6
-Synced      0    7
-RTCError    1    0
-SummerTime  1    1
-WinterTime  1    2
-LeapYear    1    3
-BF          1    4
-EoM         1    5
-EoB         1    6
-rPW         1    7
-rPT         2    0
-DCFOk       2    1
-Chime       2    2
-
-*/
+ Row  Col
+ Sunday      0    0
+ Monday      0    1
+ Tuesday     0    2
+ Wednesday   0    3
+ Thursday    0    4
+ Friday      0    5
+ Saturday    0    6
+ Synced      0    7
+ RTCError    1    0
+ SummerTime  1    1
+ WinterTime  1    2
+ LeapYear    1    3
+ BF          1    4
+ EoM         1    5
+ EoB         1    6
+ rPW         1    7
+ rPT         2    0
+ DCFOk       2    1
+ Chime       2    2
+ 
+ */
 #define SyncedLed      07
 #define RTCError       10
 #define SummerTimeLed  11
@@ -192,35 +208,36 @@ Chime       2    2
 
 
 // Pulse flanks
-static   int leadingEdge = 0;
-static   int trailingEdge = 0;
+static   int leadingEdge         = 0;
+static   int trailingEdge        = 0;
 static   int previousLeadingEdge = 0;
 
 // used in <Int0handler>
 volatile unsigned char DCFSignalState = 0;
 
 // used in <loop>
-int ss = 0;
-int previousSecond = 0;
+int ss              = 0;
+int previousSecond  = 0;
 int previousSecond2 = 0;
 unsigned char previousSignalState;
 
 // DCF Buffers and indicators
 static int DCFbitBuffer[59]; // here, the received DCFbits are stored
-const int bitValue[] = {1, 2, 4, 8, 10, 20, 40, 80}; // these are the decimal values of the received DCFbits
+const int bitValue[] = {
+  1, 2, 4, 8, 10, 20, 40, 80}; // these are the decimal values of the received DCFbits
 
 /* not used at this moment
-// Inserted a 'null' value  ("") because an array starts with position zero '0' and I need it to start at '1'
-const char dayNameLong[][10] = {"", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"};
-const char dayNameShort[][3] = {"", "Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"};
-const char monthNameLong [][10] = {"", "Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"};
-const char monthNameShort [][4] = {"", "Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"};
-*/
+ // Inserted a 'null' value  ("") because an array starts with position zero '0' and I need it to start at '1'
+ const char dayNameLong[][10] = {"", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"};
+ const char dayNameShort[][3] = {"", "Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"};
+ const char monthNameLong [][10] = {"", "Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"};
+ const char monthNameShort [][4] = {"", "Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"};
+ */
 
 static int bufferPosition = 0;
-static int endOfMinute = 0;
+static int endOfMinute    = 0;
 static int previousMinute = 0;
-static int previousHour = 0;
+static int previousHour   = 0;
 
 // used to check if switch state is changed
 int buttonChimeToggle = 0;
@@ -245,24 +262,21 @@ int weekNumber;   //Returns the number of the week in the year
 int errorCounter = 0;
 
 // miscelleanous variables
-boolean Chime = 0;
-boolean daytime = 0;
-int loopTime = 0;              // check Loop() timing
-
-//buzzer related
-boolean chimeSwitch = 0;
+boolean daytimeChange    = 1;
+boolean dayTime          = 0;        
+boolean chimeSwitch      = 0;
 boolean dcf77SoundSwitch = 0;
 
 // temperature variables
-byte present = 0;
+byte present            = 0;
 byte DS18B20Data[12];
-byte addr[8] = {0x28, 0x13, 0x95, 0x7B, 0x05, 0x00, 0x00, 0x70};
-int maxTemp = 0;
-int minTemp = 0;
-int lsByte = 0;
-int msByte = 0;
-int tempReading = 0;
-int tempCelcius = 0;
+byte addr[8]            = {0x28, 0x13, 0x95, 0x7B, 0x05, 0x00, 0x00, 0x70};
+int maxTemp             = 0;
+int minTemp             = 0;
+int lsByte              = 0;
+int msByte              = 0;
+int tempReading         = 0;
+int tempCelcius         = 0;
 boolean tempResetButton = 0;
 
 
@@ -274,13 +288,15 @@ void setup()
   // initialize Serial communication
   Serial.begin(115200);
 
-  // define DCF77PIN as input
-  pinMode(DCF77PIN, INPUT);
-  // define pin to shut off display as input
-  pinMode(CHIMEPIN, INPUT);
-  pinMode(TEMPRESETPIN, INPUT);
-  pinMode(DCF77SOUNDPIN, INPUT);
-
+  pinMode(DCF77PIN, INPUT);            // define DCF77PIN as input
+  pinMode(NOTUSEDPIN, INPUT);          // define pin to shut off display as input
+  pinMode(TEMPRESETPIN, INPUT);        // define pin to reset High / Low temperature memory
+  pinMode(DCF77SOUNDPIN, INPUT);       // define pin for switch to shut off second beep sound
+  pinMode(CHIMESWITCHPIN, OUTPUT);     // output to activate hourly chime sound
+  pinMode(CHIMEPIN, OUTPUT);           // output to activate ticking sound
+  pinMode(SPEAKERVOLPIN, OUTPUT);      // output to set LOWER speaker volume on startup
+  digitalWrite(SPEAKERVOLPIN, LOW);
+ 
   // Initialize all variables and LED displays
   initialize();
   // Initialize DCF77 signal listener interrupt
@@ -293,9 +309,19 @@ void setup()
   if (timeStatus() != timeSet)
   { // Unable to sync with the RTC - activate RTCError LED
     lc.setLed(MaximLeds, RTCError / 10, RTCError % 10, true);
-  } else {
+  } 
+  else {
     // RTC has set the system time - dim RTCError LED
     lc.setLed(MaximLeds, RTCError / 10, RTCError % 10, false);
+  }
+
+  // After power on, set the speaker volume of the Adafruit Adio Board
+  for(int i=0; i<=SPEAKERVOLUME; i++)
+  {
+      digitalWrite(SPEAKERVOLPIN, HIGH);
+      delay(100);
+      digitalWrite(SPEAKERVOLPIN, LOW);
+      delay(100);
   }
 
   // use for test purposes
@@ -325,46 +351,54 @@ void loop()
     // display 'HI' and 'LO' temperature on specific moments
     switch (second())
     {
-      case 30:
-        // display 'HI' on display for Hi temperature
-        lc1.clearDisplay(MaximDcfTime); // clear display
-        lc1.setChar(MaximDcfTime, 3, 'H', false); // Display 'H' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
-        lc1.setChar(MaximDcfTime, 2, '1', false); // Display 'I' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
-        break;
-      case 31:
-      case 32:
-        // display Max temperature on DCF display LED display
-        lc1.setChar(MaximDcfTime, 3, (maxTemp / 1000), false);
-        lc1.setChar(MaximDcfTime, 2, (maxTemp % 1000) / 100, true);
-        lc1.setChar(MaximDcfTime, 1, (maxTemp % 100) / 10, false);
-        lc1.setRow(MaximDcfTime, 0, B01001110); // Display 'C' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
-        lc1.setChar(MaximDcfTime, 5, 1, false); // activate top dot
-        break;
-      case 33:
-        // display 'LO' on display for Low temperature
-        lc1.clearDisplay(MaximDcfTime); // clear display
-        lc1.setChar(MaximDcfTime, 3, 'L', false); // Display 'L' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
-        lc1.setChar(MaximDcfTime, 2, '0', false); // Display 'O' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
-        break;
-      case 34:
-      case 35:
-        // display Min temperature on DCF display LED display
-        lc1.setChar(MaximDcfTime, 3, (minTemp / 1000), false);
-        lc1.setChar(MaximDcfTime, 2, (minTemp % 1000) / 100, true);
-        lc1.setChar(MaximDcfTime, 1, (minTemp % 100) / 10, false);
-        lc1.setRow(MaximDcfTime, 0, B01001110); // Display 'C' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
-        lc1.setChar(MaximDcfTime, 5, 1, false); // activate top dot
-        break;
-      case 36:
-        // display 'CU' on display for Current temperature
-        lc1.clearDisplay(MaximDcfTime); // clear display
-        lc1.setColumn(MaximDcfTime, 3, B01001110); // Display 'C' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
-        lc1.setColumn(MaximDcfTime, 2, B00111110); // Display 'O' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
-        break;
-        // display current temperature
-      default:
-        displayTemp();
-        break;
+    case 5:
+      // hourly chime OFF
+      digitalWrite(CHIMEPIN, HIGH);
+      break;
+    case 30:
+      // display 'HI' on display for Hi temperature
+      lc1.clearDisplay(MaximDcfTime); // clear display
+      lc1.setChar(MaximDcfTime, 3, 'H', false); // Display 'H' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
+      lc1.setChar(MaximDcfTime, 2, '1', false); // Display 'I' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
+      break;
+    case 31:
+    case 32:
+      // display Max temperature on DCF display LED display
+      lc1.setChar(MaximDcfTime, 3, (maxTemp / 1000), false);
+      lc1.setChar(MaximDcfTime, 2, (maxTemp % 1000) / 100, true);
+      lc1.setChar(MaximDcfTime, 1, (maxTemp % 100) / 10, false);
+      lc1.setRow(MaximDcfTime, 0, B01001110); // Display 'C' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
+      lc1.setChar(MaximDcfTime, 5, 1, false); // activate top dot
+      break;
+    case 33:
+      // display 'LO' on display for Low temperature
+      lc1.clearDisplay(MaximDcfTime); // clear display
+      lc1.setChar(MaximDcfTime, 3, 'L', false); // Display 'L' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
+      lc1.setChar(MaximDcfTime, 2, '0', false); // Display 'O' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
+      break;
+    case 34:
+    case 35:
+      // display Min temperature on DCF display LED display
+      lc1.setChar(MaximDcfTime, 3, (minTemp / 1000), false);
+      lc1.setChar(MaximDcfTime, 2, (minTemp % 1000) / 100, true);
+      lc1.setChar(MaximDcfTime, 1, (minTemp % 100) / 10, false);
+      lc1.setRow(MaximDcfTime, 0, B01001110); // Display 'C' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
+      lc1.setChar(MaximDcfTime, 5, 1, false); // activate top dot
+      break;
+    case 36:
+      // display 'CU' on display for Current temperature
+      lc1.clearDisplay(MaximDcfTime); // clear display
+      lc1.setColumn(MaximDcfTime, 3, B01001110); // Display 'C' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
+      lc1.setColumn(MaximDcfTime, 2, B00111110); // Display 'O' (Celcius)  character. Binary pattern to lite up individual segments in this order is: .ABCDEFG
+      break;
+    case 58:
+      // hourly chime ACTIVATE
+      if(chimeSwitch == 1 && dayTime == 1 && minute() == 59) digitalWrite(CHIMEPIN, LOW);
+      break;
+    default:
+      // display current temperature
+      displayTemp();
+      break;
     } //switch
     previousSecond = second();
   } //(second() != previousSecond)
@@ -385,15 +419,15 @@ void loop()
   // display date, week LED's, week nr etc. if time is changed
   if (minute() != previousMinute)
   {
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //           DISPLAY SHUTS DOWN FROM 8 PM UNTIL 8 AM
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //           DISPLAY SHUTS DOWN FROM 11 PM UNTIL 8 AM
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // check wether it is Day- or Nighttime
-    if (hour() >= 8 && hour() < 23)
+    if (hour() >= 8 && hour() < 21)
     {
       // it's DAYTIME so time to activate displays
-      if (daytime == 0) // wake up displays is only once needed so check variable...
+      if (daytimeChange == 1) // test variable because daytime routine is needed only once
       {
         // activate all the displays and status LED's
         for (int i = 0; i < 8; i++)
@@ -402,34 +436,42 @@ void loop()
         } //for
         // Maxim Common Anode
         lc1.shutdown(0, false);  // Common Anode display wake up
-      } //if
+      } //if (daytimeChange == 0)
 
-      daytime = 1; // set daytime variable to TRUE so display activation is disabled
+      daytimeChange = 0; // set variable so daytime routine is performed only once
+      dayTime = 1;
       displayData(); // display date, week LED's, week nr etc.
-    } //if
+
+    } //if (hour() >= 8 && hour() < 21)
+
     else
+
     {
-      daytime = 0; // 'reset' variable so display wakeup is performed when daytime is reached
-      // time to shut down displays at night to save power...
-      for (int i = 0; i < 8; i++)
+      // it's NIGHTTIME so time to deactivate displays
+      if (daytimeChange == 0) // test variable because nighttime routine is needed only once
       {
-        lc.shutdown(i, true);  // display shut down
-      } //for
-      // Maxim Common Anode
-      lc1.shutdown(0, true);  // display shut down
+        // deactivate all the displays and status LED's
+        for (int i = 0; i < 8; i++)
+        {
+          lc.shutdown(i, true);  // Common Cathode displays wakeup
+        } //for
+        // Maxim Common Anode
+        lc1.shutdown(0, true);  // Common Anode display wake up
+      } //if (daytimeChange == 0)
+
+      dayTime = 0;
+      daytimeChange = 1; // set variable so nighttime routine is performed only once
+
     } //else
 
-    //display the DCF time
-    //displayDCFTime();
     previousMinute = minute();
-  }
 
+  } //if (minute() != previousMinute)
 
 
   // reset errorCounter display every hour
   if (dcfHour != previousHour)
   {
-    // reser errorCounter to '0' every hour
     errorCounter = 0;
     ledDisplay(MaximBufferBitError, "R", 0);
     previousHour = dcfHour;
@@ -453,27 +495,27 @@ void loop()
 // called from <loop>
 //================================================================================================================
 /*
-      pulse                 pulse
-      width                 width
-      |- -|               |--   --|           |----- END OF MINUTE marker:2000ms -----|
-       ___                 _______             ___                                     ___                 _______
-      | 0 |               |   1   |           | 0 |                                   | 0 |               |   1   |
-      |   |               |       |           |   |                                   |   |               |       |
-      |   |               |       |           |   |                                   |   |               |       |
-______|   |_______________|       |___________|   |___________________________________|   |_______________|       |__ _ _ _
-      ^   ^               ^       ^           ^   ^               ^                   ^   ^               ^       ^
-    1000 2100           2000     2200       3000 3100         NO PULSE              5000 5100           6000     6200     << example millis() value
-                                                      = end of Minute indication
-      ^                   ^                   ^                                       ^                   ^
-  DCFbit# 56          DCFbit# 57          DCFbit# 58                               DCFbit# 0           DCFbit# 1  etc...   << DCF bit received
-
-      ^                   ^        ^
-  previous             leading  trailing
-  leading edge         edge     edge
-
-                          ^
-                      flanktime
-*/
+       pulse                 pulse
+       width                 width
+       |- -|               |--   --|           |----- END OF MINUTE marker:2000ms -----|
+        ___                 _______             ___                                     ___                 _______
+       | 0 |               |   1   |           | 0 |                                   | 0 |               |   1   |
+       |   |               |       |           |   |                                   |   |               |       |
+       |   |               |       |           |   |                                   |   |               |       |
+ ______|   |_______________|       |___________|   |___________________________________|   |_______________|       |__ _ _ _
+       ^   ^               ^       ^           ^   ^               ^                   ^   ^               ^       ^
+       1000 2100           2000     2200       3000 3100         NO PULSE              5000 5100           6000     6200     << example millis() value
+                                                                 = end of Minute indication
+       ^                   ^                   ^                                       ^                   ^
+       DCFbit# 56          DCFbit# 57          DCFbit# 58                               DCFbit# 0           DCFbit# 1  etc...   << DCF bit received
+       
+       ^                   ^        ^
+       previous             leading  trailing
+       leading edge         edge     edge
+       
+       ^
+       flanktime
+ */
 
 
 
@@ -819,6 +861,9 @@ void initialize(void)
   trailingEdge          = 0;
   previousLeadingEdge   = 0;
   bufferPosition        = 0;
+
+  digitalWrite(CHIMEPIN, HIGH); // Set Chimepin to default state
+
   // Reset DCFbitBuffer array, positions 0-58 (=59 bits)
   for (int i = 0; i < 59; i++) {
     DCFbitBuffer[i] = 0;
@@ -910,7 +955,7 @@ void displayBuffer(String message)
 //
 // ledDisplay on Maxim 8 digit displays
 //
-// calles from processBuffer
+// called from processBuffer
 //================================================================================================================
 void ledDisplay(int addr, String leftOrRight, int value)
 {
@@ -964,23 +1009,21 @@ void checkSwitches(void)
 
 
   //read state of switch CHIME
-  chimeSwitch = digitalRead(CHIMEPIN);
+  chimeSwitch = digitalRead(CHIMESWITCHPIN);
 
   if (chimeSwitch == 1)
   {
-    Chime = 1;
     lc.setLed(MaximLeds, ChimeLed / 10, ChimeLed % 10, true);
   } // if
   else
   {
-    Chime = 0;
     lc.setLed(MaximLeds, ChimeLed / 10, ChimeLed % 10, false);
   } // else
 
 
 
 
-  //read state of switch DCF77SOUNDPIN
+    //read state of switch DCF77SOUNDPIN
   int buttonDCF77Sound = digitalRead(DCF77SOUNDPIN);
 
   if (buttonDCF77Sound == 1)
@@ -1026,37 +1069,38 @@ int error(int errorLed)
 //================================================================================================================
 /*
 Code from: http://forum.arduino.cc/index.php/topic,44476.0.html
-
-you need to declare two global variables:
-Code:
-short dayNumber;   //Returns the number of day in the year
-short weekNumber;  //Returns the number of the week in the year
-
-and this is how you need to call the function in your loop:
-Code:
+ 
+ you need to declare two global variables:
+ Code:
+ short dayNumber;   //Returns the number of day in the year
+ short weekNumber;  //Returns the number of the week in the year
+ 
+ and this is how you need to call the function in your loop:
+ Code:
  dayWeekNumber(year(),month(),day(),weekday());
-
-Take into account that i use TIME library in my sketch, so how you call to year, month, day and day of week could change for other libraries.
-
-and this is an example of how to call the function and show the results:
-Code:
-dayWeekNumber(year(),month(),day(),weekday());
-  Serial.print("Day #");
-  Serial.print(dayNumber);
-  Serial.print(" at week # ");
-  Serial.print(weekNumber);
-  Serial.print(" of ");
-  Serial.println(year());
-
-Be aware than in the function, there is a problematic line:
-Code:
-   WN = (DN-7+10)/7;
-This is because in the library the week starts on Sunday (0), however, in the ISO standard,
-week start on monday (1), and sunday is the last day (7). For that reason, i included this especial case in the code.
-*/
+ 
+ Take into account that i use TIME library in my sketch, so how you call to year, month, day and day of week could change for other libraries.
+ 
+ and this is an example of how to call the function and show the results:
+ Code:
+ dayWeekNumber(year(),month(),day(),weekday());
+ Serial.print("Day #");
+ Serial.print(dayNumber);
+ Serial.print(" at week # ");
+ Serial.print(weekNumber);
+ Serial.print(" of ");
+ Serial.println(year());
+ 
+ Be aware than in the function, there is a problematic line:
+ Code:
+ WN = (DN-7+10)/7;
+ This is because in the library the week starts on Sunday (0), however, in the ISO standard,
+ week start on monday (1), and sunday is the last day (7). For that reason, i included this especial case in the code.
+ */
 int dayWeekNumber(int y, int m, int d, int w)
 {
-  int days[] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}; // Number of days at the beginning of the month in a (not leap) year.
+  int days[] = {
+    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334            }; // Number of days at the beginning of the month in a (not leap) year.
   //Start to calculate the number of day
   if (m == 1 || m == 2) {
     //for any type of year, it calculate the number of days for January or february
@@ -1092,15 +1136,16 @@ int dayWeekNumber(int y, int m, int d, int w)
 //================================================================================================================
 
 /*****
-Purpose: Determine if a given year is a leap year
-Parameters:    int year  // The year to test
-Return value:  int       // '1' if the year is a leap year, '0'otherwise
-*****/
+ * Purpose: Determine if a given year is a leap year
+ * Parameters:    int year  // The year to test
+ * Return value:  int       // '1' if the year is a leap year, '0'otherwise
+ *****/
 int calculateLeapYear(int year)
 {
   if (year % 4 == 0 && year % 100 != 0 || year % 400 == 0) {
     return 1;
-  } else {
+  } 
+  else {
     return 0;
   }
 }
@@ -1113,15 +1158,6 @@ int calculateLeapYear(int year)
 
 void displayData(void)
 {
-
-  // sound buzzer on whole hour
-  if (minute() == 00 && Chime == 1)
-  {
-    // beep-beep on whole hour
-    tone(BUZZER, 4000, 180);
-    delay (250);
-    tone(BUZZER, 4000, 180);
-  }
 
   // display Day of Week on LED's
   // first, clear all the 'Day' Led's (row '0') before displaying new value
@@ -1150,33 +1186,34 @@ void displayData(void)
 
   /*
   // display Date - with dots between D.M.Y
-  lc.setChar(MaximDate, 7, dcfDay / 10, false);
-  lc.setChar(MaximDate, 6, dcfDay % 10, true);
-  lc.setChar(MaximDate, 5, dcfMonth / 10, false);
-  //lc.setChar(MaximDate, 5, ((dcfMonth < 10) ? ' ' : (dcfMonth / 10)), false);
-  lc.setChar(MaximDate, 4, dcfMonth % 10, true);
-  lc.setChar(MaximDate, 3, 2, false);
-  lc.setChar(MaximDate, 2, 0, false);
-  lc.setChar(MaximDate, 1, dcfYear / 10, false);
-  lc.setChar(MaximDate, 0, dcfYear % 10, false);
-  */
+   lc.setChar(MaximDate, 7, dcfDay / 10, false);
+   lc.setChar(MaximDate, 6, dcfDay % 10, true);
+   lc.setChar(MaximDate, 5, dcfMonth / 10, false);
+   //lc.setChar(MaximDate, 5, ((dcfMonth < 10) ? ' ' : (dcfMonth / 10)), false);
+   lc.setChar(MaximDate, 4, dcfMonth % 10, true);
+   lc.setChar(MaximDate, 3, 2, false);
+   lc.setChar(MaximDate, 2, 0, false);
+   lc.setChar(MaximDate, 1, dcfYear / 10, false);
+   lc.setChar(MaximDate, 0, dcfYear % 10, false);
+   */
 
   /*
   // display Date - moved day to right if month is <10
-  lc.setChar(MaximDate, 7, ((dcfDay < 10) ? ' ' : ((dcfMonth < 10) ? ' ' : (dcfDay / 10))), false);
-  lc.setChar(MaximDate, 6, ((dcfMonth < 10) ? ((dcfDay < 10) ? ' ' : (dcfDay / 10)) : (dcfDay % 10)), ((dcfMonth < 10) ? false : true));
-  lc.setChar(MaximDate, 5, ((dcfMonth < 10) ? (dcfDay % 10) : (dcfMonth / 10)), ((dcfMonth < 10) ? true : false));
-  lc.setChar(MaximDate, 4, dcfMonth % 10, true);
-  lc.setChar(MaximDate, 3, 2, false);
-  lc.setChar(MaximDate, 2, 0, false);
-  lc.setChar(MaximDate, 1, dcfYear / 10, false);
-  lc.setChar(MaximDate, 0, dcfYear % 10, false);
-  */
+   lc.setChar(MaximDate, 7, ((dcfDay < 10) ? ' ' : ((dcfMonth < 10) ? ' ' : (dcfDay / 10))), false);
+   lc.setChar(MaximDate, 6, ((dcfMonth < 10) ? ((dcfDay < 10) ? ' ' : (dcfDay / 10)) : (dcfDay % 10)), ((dcfMonth < 10) ? false : true));
+   lc.setChar(MaximDate, 5, ((dcfMonth < 10) ? (dcfDay % 10) : (dcfMonth / 10)), ((dcfMonth < 10) ? true : false));
+   lc.setChar(MaximDate, 4, dcfMonth % 10, true);
+   lc.setChar(MaximDate, 3, 2, false);
+   lc.setChar(MaximDate, 2, 0, false);
+   lc.setChar(MaximDate, 1, dcfYear / 10, false);
+   lc.setChar(MaximDate, 0, dcfYear % 10, false);
+   */
 
   // display Summer- or Wintertime LED
-  if (dcfDST = 1) {
+  if (dcfDST == 1) {
     lc.setLed(MaximLeds, SummerTimeLed / 10, SummerTimeLed % 10, true);
-  } else {
+  } 
+  else {
     lc.setLed(MaximLeds, WinterTimeLed / 10, WinterTimeLed % 10, true);
   }
 
@@ -1291,60 +1328,219 @@ void displayTemp(void)
   lc1.setChar(MaximDcfTime, 5, 1, false); // activate top dot
 }
 
+/*
+//================================================================================================================
+ //
+ // writeScratchpad - change data in memory of DS18B20 sensor
+ //
+ // USE ONLY once in LOOP() IF YOU WANT TO CHANGE RESOLUTION
+ //================================================================================================================
+ 
+ void writeScratchpad(void)
+ {
+ // This is done ONCE in setup()
+ 
+ // INITIALIZATION
+ // All transactions on the 1-Wire bus begin with an initialization sequence.
+ // The initialization sequence consists of a reset pulse transmitted by the bus master followed by presence pulse(s) transmitted by the slave(s).
+ // The presence pulse lets the bus master know that slave devices (such as the DS18B20) are on the bus and are ready to operate.
+ ds.reset();      // The initialization sequence consists of a reset pulse transmitted by the bus master followed by presence pulse(s) transmitted by the slave(s).
+ 
+ // Select a specific DS18x20 device
+ byte addr[8] = {
+ 0x28, 0x13, 0x95, 0x7B, 0x05, 0x00, 0x00, 0x70          };
+ ds.select(addr);
+ 
+ // WRITE SCRATCHPAD
+ // This command allows the master to write 3 bytes of data to the DS18B20’s scratchpad.
+ // The first data byte is written into the TH register (byte 2 of the scratchpad), the second byte is written into the TL register (byte 3),
+ // and the third byte is written into the configuration register (byte 4).
+ // Data must be transmitted least significant bit first. All three bytes MUST be written before the master issues a reset, or the data may be corrupted.
+ ds.write(0x4E);
+ 
+ ds.write(0); // write zero into the alarm register HIGH
+ ds.write(0); // write zero into the alarm register LOW
+/* and write R1 and R2 into the configuration register to select the precision of the temperature
+ R1/R2 value | resolution | conversion time | increments
+ HEX   DEC
+ 0  0   0   =   9 bits   |   93,75 ms      | 0,5 Celsius
+ 0  1   1   =  10 bits   |   187,5 ms      | 0,25
+ 1  0   2   =  11 bits   |   375 ms        | 0,125
+ 1  1   3   =  12 bits   |   750 ms        | 0,0625
+ CONFIGURATION REGISTER:
+ ------ Bit ------
+ 7  6  5  4  3  2  1  0
+ 0  R1 R0 1  1  1  1  1
+ 
+ // CURRENT SETTING:
+ ds.write(0 << 5); // << 5 means shift value 5 positions to the left. ds.write(B00011111) does the same
+ 
+ 
+ // WRITE SCRATCHPAD DATA TO EEPROM
+ ds.reset();
+ ds.select(addr);
+ // COPY SCRATCHPAD [48h]
+ // This command copies the contents of the scratchpad TH, TL and configuration registers (bytes 2, 3 and 4) to EEPROM.
+ // If the device is being used in parasite power mode, within 10μs (max) after this command is issued the master must
+ // enable a strong pullup on the 1-Wire bus for at least 10ms as described in the Powering the DS18B20 section.
+ ds.write(0x48);
+ }
+ 
+ //================================================================================================================
+ //
+ // ARCHIVE
+ //
+ //================================================================================================================
+ 
+ 
+ Basic Usage of Onewire Library
+ 
+ 
+ OneWire myWire(pin)
+ Create the OneWire object, using a specific pin. Even though you can connect many 1 wire devices to the same pin, if you have a large number, smaller groups each on their own pin can help isolate wiring problems. You can create multiple OneWire objects, one for each pin.
+ 
+ myWire.search(addrArray)
+ Search for the next device. The addrArray is an 8 byte array. If a device is found, addrArray is filled with the device's address and true is returned. If no more devices are found, false is returned.
+ 
+ myWire.reset_search()
+ Begin a new search. The next use of search will begin at the first device.
+ 
+ myWire.reset()
+ Reset the 1-wire bus. Usually this is needed before communicating with any device.
+ 
+ myWire.select(addrArray)
+ Select a device based on its address. After a reset, this is needed to choose which device you will use, and then all communication will be with that device, until another reset.
+ 
+ myWire.skip()
+ Skip the device selection. This only works if you have a single device, but you can avoid searching and use this to immediatly access your device.
+ 
+ myWire.write(num);
+ Write a byte.
+ 
+ myWire.write(num, 1);
+ Write a byte, and leave power applied to the 1 wire bus.
+ 
+ myWire.read()
+ Read a byte.
+ 
+ myWire.crc8(dataArray, length)
+ Compute a CRC check on an array of data.
+ 
+ 
+ //================================================================================================================
+ 
+ 
+ #include "Wire.h"
+ #define DS1307_I2C_ADDRESS 0x68
+ // Convert normal decimal numbers to binary coded decimal
+ byte decToBcd(byte val)
+ {
+ return ( (val/10*16) + (val%10) );
+ }
+ // Convert binary coded decimal to normal decimal numbers
+ byte bcdToDec(byte val)
+ {
+ return ( (val/16*10) + (val%16) );
+ }
+ // Stops the DS1307, but it has the side effect of setting seconds to 0
+ // Probably only want to use this for testing
+/*void stopDs1307()
+ {
+ Wire.beginTransmission(DS1307_I2C_ADDRESS);
+ Wire.send(0);
+ Wire.send(0x80);
+ Wire.endTransmission();
+ }
+ // 1) Sets the date and time on the ds1307
+ // 2) Starts the clock
+ // 3) Sets hour mode to 24 hour clock
+ // Assumes you're passing in valid numbers
+ void setDateDs1307(byte second,        // 0-59
+ byte minute,        // 0-59
+ byte hour,          // 1-23
+ byte dayOfWeek,     // 1-7
+ byte dayOfMonth,    // 1-28/29/30/31
+ byte month,         // 1-12
+ byte year)          // 0-99
+ {
+ Wire.beginTransmission(DS1307_I2C_ADDRESS);
+ Wire.send(0);
+ Wire.send(decToBcd(second));    // 0 to bit 7 starts the clock
+ Wire.send(decToBcd(minute));
+ Wire.send(decToBcd(hour));      // If you want 12 hour am/pm you need to set
+ // bit 6 (also need to change readDateDs1307)
+ Wire.send(decToBcd(dayOfWeek));
+ Wire.send(decToBcd(dayOfMonth));
+ Wire.send(decToBcd(month));
+ Wire.send(decToBcd(year));
+ Wire.endTransmission();
+ }
+ // Gets the date and time from the ds1307
+ void getDateDs1307(byte *second,
+ byte *minute,
+ byte *hour,
+ byte *dayOfWeek,
+ byte *dayOfMonth,
+ byte *month,
+ byte *year)
+ {
+ // Reset the register pointer
+ Wire.beginTransmission(DS1307_I2C_ADDRESS);
+ Wire.send(0);
+ Wire.endTransmission();
+ Wire.requestFrom(DS1307_I2C_ADDRESS, 7);
+ // A few of these need masks because certain bits are control bits
+ *second     = bcdToDec(Wire.receive() & 0x7f);
+ *minute     = bcdToDec(Wire.receive());
+ *hour       = bcdToDec(Wire.receive() & 0x3f);  // Need to change this if 12 hour am/pm
+ *dayOfWeek  = bcdToDec(Wire.receive());
+ *dayOfMonth = bcdToDec(Wire.receive());
+ *month      = bcdToDec(Wire.receive());
+ *year       = bcdToDec(Wire.receive());
+ }
+ void setup()
+ {
+ byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
+ Wire.begin();
+ Serial.begin(9600);
+ // Change these values to what you want to set your clock to.
+ // You probably only want to set your clock once and then remove
+ // the setDateDs1307 call.
+ second = 45;
+ minute = 3;
+ hour = 7;
+ dayOfWeek = 5;
+ dayOfMonth = 17;
+ month = 4;
+ year = 8;
+ setDateDs1307(second, minute, hour, dayOfWeek, dayOfMonth, month, year);
+ }
+ void loop()
+ {
+ byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;
+ getDateDs1307(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month, &year);
+ Serial.print(hour, DEC);
+ Serial.print(":");
+ Serial.print(minute, DEC);
+ Serial.print(":");
+ Serial.print(second, DEC);
+ Serial.print("  ");
+ Serial.print(month, DEC);
+ Serial.print("/");
+ Serial.print(dayOfMonth, DEC);
+ Serial.print("/");
+ Serial.print(year, DEC);
+ Serial.print("  Day_of_week:");
+ Serial.println(dayOfWeek, DEC);
+ delay(1000);
+ }
+ */
 
 //================================================================================================================
-//
-// writeScratchpad - change data in memory of DS18B20 sensor
-//
-// USE ONLY once in LOOP() IF YOU WANT TO CHANGE RESOLUTION
-//================================================================================================================
-
-void writeScratchpad(void)
-{
-  // This is done ONCE in setup()
-
-  // INITIALIZATION
-  // All transactions on the 1-Wire bus begin with an initialization sequence.
-  // The initialization sequence consists of a reset pulse transmitted by the bus master followed by presence pulse(s) transmitted by the slave(s).
-  // The presence pulse lets the bus master know that slave devices (such as the DS18B20) are on the bus and are ready to operate.
-  ds.reset();      // The initialization sequence consists of a reset pulse transmitted by the bus master followed by presence pulse(s) transmitted by the slave(s).
-
-  // Select a specific DS18x20 device
-  byte addr[8] = {0x28, 0x13, 0x95, 0x7B, 0x05, 0x00, 0x00, 0x70};
-  ds.select(addr);
-
-  // WRITE SCRATCHPAD
-  // This command allows the master to write 3 bytes of data to the DS18B20’s scratchpad.
-  // The first data byte is written into the TH register (byte 2 of the scratchpad), the second byte is written into the TL register (byte 3),
-  // and the third byte is written into the configuration register (byte 4).
-  // Data must be transmitted least significant bit first. All three bytes MUST be written before the master issues a reset, or the data may be corrupted.
-  ds.write(0x4E);
-
-  ds.write(0); // write zero into the alarm register HIGH
-  ds.write(0); // write zero into the alarm register LOW
-  /* and write R1 and R2 into the configuration register to select the precision of the temperature
-   R1/R2 value | resolution | conversion time | increments
-   HEX   DEC
-   0  0   0   =   9 bits   |   93,75 ms      | 0,5 Celsius
-   0  1   1   =  10 bits   |   187,5 ms      | 0,25
-   1  0   2   =  11 bits   |   375 ms        | 0,125
-   1  1   3   =  12 bits   |   750 ms        | 0,0625
-   CONFIGURATION REGISTER:
-   ------ Bit ------
-   7  6  5  4  3  2  1  0
-   0  R1 R0 1  1  1  1  1
-   */
-  // CURRENT SETTING:
-  ds.write(0 << 5); // << 5 means shift value 5 positions to the left. ds.write(B00011111) does the same
 
 
-  // WRITE SCRATCHPAD DATA TO EEPROM
-  ds.reset();
-  ds.select(addr);
-  // COPY SCRATCHPAD [48h]
-  // This command copies the contents of the scratchpad TH, TL and configuration registers (bytes 2, 3 and 4) to EEPROM.
-  // If the device is being used in parasite power mode, within 10μs (max) after this command is issued the master must
-  // enable a strong pullup on the 1-Wire bus for at least 10ms as described in the Powering the DS18B20 section.
-  ds.write(0x48);
-}
+
+
+
+
 
