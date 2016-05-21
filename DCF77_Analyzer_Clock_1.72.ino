@@ -36,6 +36,19 @@
  May 2014 First version
  March 2016 - big overhaul...
 
+
+ Version 1.72
+ - Option: Use a cheap Ebay PIR detector to shut off selectable display's when no activity is detected. 
+   The switch off delay can be set by the user to prevent the display shutting of if a person
+   is not moving but the display should be on.
+ - Now the display Night shut-down can be disabled by making both values 'POWERSAVINGOFFTIME'
+   and 'POWERSAVINGONTIME' zero. 
+ - Fixed temperature display not shutting off at powersave mode.  
+ - errorCounter display did not reset every hour so that's fixed
+
+ Version 1.71
+ - User option to reset temperature min/max memory at midnight
+
  Version 1.7:
  - The resolution of the temperature display is improved: from 0.5 to 0.1 degrees Celsius
    Because of the time the DS18B20 sensor needs to convert the temperature and to keep the code clean, 
@@ -47,7 +60,9 @@
    and only turns ON when all 3 parity bits are OK.
 
  Version 1.6:
- - Changed temperature function to only calculate once per minute. Got strange errors before the change.
+ - Changed temperature function to only calculate once per minute. Got strange errors before the change because
+   I used a delay of 100ms to give the DS18B20 sensor time to calculate the temperature. But the delay function is
+   a very bad idea in most c++ code so I finally got rid of it.
 
  Version 1.5:
  - Complete overhaul of the scanSignal function and the rest of the code! My first attempt worked but could be improved...
@@ -72,45 +87,53 @@
   Short description:
    
   Power On:
-  After power-on, first a LED test is performed. The LED's and displays lite up sequentially to keep the power consumption low.
-  Then the clock starts receiving DCF pulses and when a Minute Mark (2 seconds gap) is detected, the Minute Marker LED is lit
-  and the buffer counter is reset. The inner LED ring now will show the incoming DCF pulses which are also stored in the buffer.
-  At 3 moments during reception of data the parity DCF bits are checked to see if the data is valid.
+    After power-on, first a LED test is performed. The LED's and displays lite up sequentially to keep the power consumption low.
+    Then the clock starts receiving DCF pulses and when a Minute Mark (2 seconds gap) is detected, the Minute Marker LED is lit
+    and the buffer counter is reset. The inner LED ring now will show the incoming DCF pulses which are also stored in the buffer.
+    At 3 moments during reception of data the parity DCF bits are checked to see if the data is valid.
 
   Valid data received:
-  When, at the end of the minute, after the Minute Mark is detected (BF (Buffer Full) LED is lit), all three parity bits are OK
-  ('DCF OK' LED is lit), the buffer information is used to extract time and date information. 
-  Then the RTC clock is updated ('RTC Synced' LED is lit) and the inner LED ring information is copied to the outer LED ring. 
-  The time, date and week display, day LED, summer/wintertime and leap year LED information is updated with the new time information.
+    When, at the end of the minute, after the Minute Mark is detected (BF (Buffer Full) LED is lit), all three parity bits are OK
+    ('DCF OK' LED is lit), the buffer information is used to extract time and date information. 
+    Then the RTC clock is updated ('RTC Synced' LED is lit) and the inner LED ring information is copied to the outer LED ring. 
+    The time, date and week display, day LED, summer/wintertime and leap year LED information is updated with the new time information.
 
   No valid data:
-  When one or more of the parity bits are not OK because of a noisy signal, receiving of DCF information is continued but
-  will not be used to update the RTC, display's and LED's. The outer LED ring, 'RTC synced' and 'DCF OK' LED's will be reset. 
-  Time, date, week, day LED, summer/wintertime LED and leap year LED are not affected and keep displaying the last received valid values.
-  The 'Period Time' and/or 'Period With' error LED's will indicate the error(s) and the error counter display is updated. 
-  Every hour, the error display will bet set to zero. 
-  The EoB, End of Buffer LED is lit when more DCF pulses are received before the Minute Mark is detected due to a noisy signal.
-  (When a minute Mark is detected we should have no more than 58 bits/pulses) 
-  After the detection of the Minute Marker, a new cycle is started.
+    When one or more of the parity bits are not OK because of a noisy signal, receiving of DCF information is continued but
+    will not be used to update the RTC, display's and LED's. The outer LED ring, 'RTC synced' and 'DCF OK' LED's will be reset. 
+    Time, date, week, day LED, summer/wintertime LED and leap year LED are not affected and keep displaying the last received valid values.
+    The 'Period Time' and/or 'Period With' error LED's will indicate the error(s) and the error counter display is updated. 
+    Every hour, the error display will bet set to zero. 
+    The EoB, End of Buffer LED is lit when more DCF pulses are received before the Minute Mark is detected due to a noisy signal.
+    (When a minute Mark is detected we should have no more than 58 bits/pulses) 
+    After the detection of the Minute Marker, a new cycle is started.
  
   Temperature:
-  At the 30 second mark, the temperature display will show the High and Low values of the past period after the last reset.
+    At the 30 second mark, the temperature display will show the High and Low values of the past period after the last reset.
   
   Chime:
-  At the beginning of each hour, the Chime (if connected) will sound. 
-  At night time, a time set by the user in the code itself, the chime is disabled.
+    At the beginning of each hour, the Chime (if connected) will sound. 
+    At night time, a time set by the user in the code itself, the chime is disabled.
 
-  Power saving:
-  At times set by the user, the displays are shutt off at night and turned on in the morning.
-  Look at the POWERSAVINGOFFTIME and POWERSAVINGONTIME variables. 
-  Check the function <tasksEveryHour> to select which displays you want to shut off at night.
+  Power saving, two options:
+    1. NIGHT SHUT OFF
+       At times set by the user, the displays are shutt off at night and turned on in the morning.
+       Look at the POWERSAVINGOFFTIME and POWERSAVINGONTIME variables. 
+       Check the function <turnDisplaysOff> to select which displays you want to shut off at night.
+    2. PIR SENSOR
+       Connect a PIR sensor and activate the PIR option POWERSAVE_BY_PIR and the the delay at PIR_DELAY_TIME.
+       Every time the PIR detector senses movement, a minute counter is reset but if no movement is detected
+       longer than the PIR_DELAY_TIME, the displays are shut off. 
+       When movement occurs, the displays immediately switch on. 
+    Note: as said before, the clock will function normally while the displays are shut off. 
+    The only thing is you can't see it... ;)
 
   DCF beep:
-  With a switch, connected to pin BUZZERPIN, you can hear the received DCF bits coming in. 
-  The tone duration is equivalent to pulse width of the DCF bits, so either 100 or 200 ms.
+    With a switch, connected to pin BUZZERPIN, you can hear the received DCF bits coming in. 
+    The tone duration is equivalent to pulse width of the DCF bits, so either 100 or 200 ms.
   
   Miscelleanous:
-  When the RTC battery is empty or a connection fault is detected, the RTC Error LED is lit.
+    When the RTC battery is empty or a connection fault is detected, the RTC Error LED is lit.
 
 
 
@@ -173,7 +196,7 @@
                               // Pin  0 - input  - Rx - used for programming/communication with PC
                               // Pin  1 - output - Tx - used for programming/communication with PC
 #define DCF77PIN            2 // Pin  2 - input  - DCF signal from antenna pcb. Must be pin 2 or 3 because of interrupt!
-                              // Pin  3
+#define PIRDETECTORPIN      3 // Pin  3 - input  - PIR detector: check for activity in the room to activate displays
 #define BUZZERPIN           4 // Pin  4 - input  - SWITCH - turn on/off DCF77 'beep' piezo buzzer / ON = HIGH, OFF = LOW
 #define MAXIMCALD           5 // Pin  5 - output - CS/LOAD - Maxim Common Cathode 7 segment displays
 #define MAXIMCACLK          6 // Pin  6 - output - CLOCK   - Maxim Common Cathode 7 segment displays
@@ -248,8 +271,19 @@ LedControl MaximCA = LedControl(MAXIMCADATA, MAXIMCACLK, MAXIMCALD, 1, true); //
 // define power saving display OFF and ON time
 // values are in 'Hour' format
 // ONLY the displays are shut off at power saving time, the clock remains active.
-#define POWERSAVINGOFFTIME 8  // displays are activated
-#define POWERSAVINGONTIME  23 // displays are shutt off
+// To disable this feature, make both values zero
+#define POWERSAVINGOFFTIME 0  // displays are activated
+#define POWERSAVINGONTIME  0 // displays are shutt off
+
+// User option to reset temperature min/max memory at midnight
+// '1' = Reset at midnight, '0' = Only manual reset
+#define TEMPRESET_MIDNIGHT 1
+
+// User option: activate the displays only when there is activity in the room
+// '1' = ON, '0' = OFF
+#define POWERSAVE_BY_PIR 1
+// delay in MINUTES to wait after no detection before shutting off the displays 
+#define PIR_DELAY_TIME 5 
 
 //-------------------------------------------------------------------------------
 // define miscellaneous parameters
@@ -285,6 +319,7 @@ LedControl MaximCA = LedControl(MAXIMCADATA, MAXIMCACLK, MAXIMCALD, 1, true); //
 // to lit a LED you need a ROW and COLUMN value.
 // so, for example: BFLed (with value 14) divided by 10 results in the value '1' (row)
 // and BFLed % (Modulo) 10 results in the value '4' (column)
+// Modulo explained: http://www.cprogramming.com/tutorial/modulus.html
 
 /* Row/Col LED numbers of Maxim 7219 chip
  LED            Row Col
@@ -402,6 +437,12 @@ float tempReading       = 0;
 int tempCelsius         = 0;
 boolean tempResetButton = false;
 
+// PIR detector variables
+int pirActivity               = 0;
+int pirDisplaysState          = 1;
+unsigned int pirTimer         = 0;
+unsigned long previousTimePIR = 0;        
+
 
 //==============================================================================
 // SETUP
@@ -415,6 +456,7 @@ void setup()
   pinMode(DCF77PIN,      INPUT);
   pinMode(TEMPRESETPIN,  INPUT);
   pinMode(BUZZERPIN,     INPUT);
+  pinMode(PIRDETECTORPIN,INPUT);
   pinMode(CHIMEPIN,      OUTPUT);
   pinMode(SPEAKERVOLPIN, OUTPUT);
  
@@ -481,7 +523,7 @@ void setup()
   // Now get the temperature from the sensor and display it
   displayTemp();
 
-  // reset errorCounter display
+  // activate errorCounter display after LED test
   ledDisplay(MaximBufferBitError, "R", 0);
 
 }
@@ -505,6 +547,9 @@ void loop()
 
   // check if switches are changed and act upon it
   checkSwitches();
+
+  // check for PIR movement
+  checkPIR();
   
   // execute tasks that must happen only once every second, minute or hour
   //----------------------------------------------------------------------------
@@ -1022,6 +1067,18 @@ void tasksEverySecond()
     case 0:
       // hourly chime output: ACTIVATE
       if(dayTime == 1 && minute() == 0) digitalWrite(CHIMEPIN, HIGH);
+
+      // reset temperature min/max memory at midnight
+      //
+      // I did put this in the 'tasks every second' section so
+      // that this code is executed at one specific second only...
+      // Else we would need an extra variable to prevent this code to run
+      // every cycle during the whole '00' hour. 
+      if(TEMPRESET_MIDNIGHT == 1 && (hour() == 00 && minute() == 00) )
+      {
+        minTemp = tempCelsius;
+        maxTemp = tempCelsius;
+      }
       break;
     case 2:
       // hourly chime output: DEACTIVATE
@@ -1092,7 +1149,6 @@ void tasksEveryMinute()
   // display date, week LED's, week nr etc. if time is changed
   if (minute() != previousMinute)
   {
-    
     // 'reset' state of variable
     previousMinute = minute();
 
@@ -1101,6 +1157,10 @@ void tasksEveryMinute()
     {
       displayData(); 
     }
+
+    // increase PIR delay counter
+    pirTimer++;
+
   }
 }
 
@@ -1116,80 +1176,66 @@ void tasksEveryMinute()
 //================================================================================================================
 void tasksEveryHour()
 { 
-  if (dcfHour != previousHour)
+  if (hour() != previousHour)
   {
     // 'reset' variable state
-    previousHour = dcfHour;
+    previousHour = hour();
 
     //--------------------------------------------------------------------
-    // reset error counter and display
+    // reset error counter and display every hour
     //--------------------------------------------------------------------
     errorCounter = 0;
-    ledDisplay(MaximBufferBitError, "R", 0);
-
+    // update error counter display
+    ledDisplay(MaximBufferBitError, "R", errorCounter);
 
     //---------------------------------------------------------------------
-    // Display power saving function, shutting the displays off at night
+    // Power saving function, shutting the displays off at night
     //---------------------------------------------------------------------
 
-    // check whether it is Day- or Nighttime
-    if (hour() >= POWERSAVINGOFFTIME && hour() <= POWERSAVINGONTIME)
-    {
-      // ----------------------------------------
-      // it's DAYTIME so activate the displays
-      // ----------------------------------------
-      
-      // this is used to chime only if it is daytime...
-      dayTime = 1; 
-
-       // test variable because daytime routine is needed only once
-      if (daytimeChange == 1)
+    // First, check if the night shut-down function is activated by the user
+    // simply by adding up both value. If '0', the user has disabled the function
+    if(POWERSAVINGOFFTIME != 0 && POWERSAVINGONTIME != 0)
+    { 
+      // check whether it is Day- or Nighttime
+      if (hour() >= POWERSAVINGOFFTIME && hour() <= POWERSAVINGONTIME)
       {
-        // 'reset' variable state
-        daytimeChange = 0;
+        // ----------------------------------------
+        // it's DAYTIME so activate the displays
+        // ----------------------------------------
+        
+        // this is used to chime only if it is daytime...
+        dayTime = 1; 
 
-        // activate SELECTED displays and status LED's
-        MaximCC.shutdown(MaximRtcTime, false);
-        MaximCC.shutdown(MaximDate, false);
-        MaximCC.shutdown(MaximWeek, false);
-        MaximCC.shutdown(MaximLeds, false);
-        MaximCC.shutdown(MaximLedRingInner, false);
-        MaximCC.shutdown(MaximLedRingOuter, false);
-        MaximCC.shutdown(MaximTemperature, false);
-        MaximCC.shutdown(MaximPeriodPulse, false);
-        MaximCC.shutdown(MaximBufferBitError, false);
+         // test variable because daytime routine is needed only once
+        if (daytimeChange == 1)
+        {
+          // 'reset' variable state
+          daytimeChange = 0;
+
+          // activate SELECTED displays and status LED's
+          turnDisplaysOn();
+        }
       }
-    }
-
-    else
-
-    {
-      // no chime at night...
-      dayTime = 0; 
-
-      // ----------------------------------------
-      // it's NIGHTTIME so time to deactivate displays
-      // ----------------------------------------
-      // test variable because nighttime routine is needed only once
-      if (daytimeChange == 0) 
+      else
       {
-        // 'reset' variable state
-        daytimeChange = 1; 
+        // no chime at night...
+        dayTime = 0; 
 
-        // deactivate all the displays and status LED's
-        // below you can select which display's need to be shut down for the night
-        MaximCC.shutdown(MaximRtcTime, true);
-        MaximCC.shutdown(MaximDate, true);
-        MaximCC.shutdown(MaximWeek, true);
-        MaximCC.shutdown(MaximLeds, true);
-        MaximCC.shutdown(MaximLedRingInner, true);
-        MaximCC.shutdown(MaximLedRingOuter, true);
-      //MaximCC.shutdown(MaximTemperature, true); Time display remains ON
-        MaximCC.shutdown(MaximPeriodPulse, true);
-        MaximCC.shutdown(MaximBufferBitError, true);
+        // ----------------------------------------
+        // it's NIGHTTIME so time to deactivate displays
+        // ----------------------------------------
+        // test variable because nighttime routine is needed only once
+        if (daytimeChange == 0) 
+        {
+          // 'reset' variable state
+          daytimeChange = 1; 
 
-      }// if (daytimeChange == 0)
-    }// else
+          // deactivate all the displays and status LED's
+          turnDisplaysOff();
+
+        }// if (daytimeChange == 0)
+      }// else
+    }// if(POWERSAVINGOFFTIME + POWERSAVINGONTIME != 0)
   }// if (dcfHour != previousHour)
 }// void tasksEveryHour()
 
@@ -1290,6 +1336,60 @@ void int0handler()
 
 //================================================================================================================
 //
+// Function name : turnDisplaysOn
+// called from   : <tasksEveryHour> and <checkPIR>
+//
+// Purpose       : turn ON selected 7 segment displays and LED's
+// Parameters    : none
+// Return value  : none
+//
+//================================================================================================================
+void turnDisplaysOn()
+{
+  // activate SELECTED displays and status LED's
+  MaximCC.shutdown(MaximRtcTime, false);
+  MaximCC.shutdown(MaximDate, false);
+  MaximCC.shutdown(MaximWeek, false);
+  MaximCC.shutdown(MaximLeds, false);
+  MaximCC.shutdown(MaximLedRingInner, false);
+  MaximCC.shutdown(MaximLedRingOuter, false);
+  MaximCC.shutdown(MaximPeriodPulse, false);
+  MaximCC.shutdown(MaximBufferBitError, false);
+  // Common Anode displays
+  MaximCA.shutdown(MaximTemperature, false);
+
+}
+
+//================================================================================================================
+//
+// Function name : turnDisplaysOff
+// called from   : <tasksEveryHour> and <checkPIR>
+//
+// Purpose       : turn OFF selected 7 segment displays and LED's
+// Parameters    : none
+// Return value  : none
+//
+//================================================================================================================
+void turnDisplaysOff()
+{
+  // below you can select which display's need to be shut down for the night
+  // In this case, the time display remains ON
+
+  //MaximCC.shutdown(MaximRtcTime, true);
+  MaximCC.shutdown(MaximDate, true); 
+  MaximCC.shutdown(MaximWeek, true);
+  MaximCC.shutdown(MaximLeds, true);
+  MaximCC.shutdown(MaximLedRingInner, true);
+  MaximCC.shutdown(MaximLedRingOuter, true);
+  MaximCC.shutdown(MaximPeriodPulse, true);
+  MaximCC.shutdown(MaximBufferBitError, true);
+  // Common Anode displays
+  MaximCA.shutdown(MaximTemperature, true);
+
+}
+
+//================================================================================================================
+//
 // Function name : ledDisplay
 // called from   : <processBuffer>
 //
@@ -1341,9 +1441,9 @@ void ledDisplay(int addr, String leftOrRight, int value)
 // Return value  : none
 //
 //================================================================================================================
-
 void checkSwitches(void)
 {
+  //-------------------------------------------------------------
   // read state of push button tempResetButton
   tempResetButton = digitalRead(TEMPRESETPIN);
   // reset temperature min/max values when push-button is pressed
@@ -1353,10 +1453,71 @@ void checkSwitches(void)
     minTemp = tempCelsius;
   }
 
+  //-------------------------------------------------------------
   //read state of switch BUZZERPIN
   dcf77SoundSwitch = digitalRead(BUZZERPIN);
 }
 
+//================================================================================================================
+//
+// Function name : checkPIR
+// called from   : <loop>
+//
+// Purpose       : check for PIR detector activity to shut off or activate the displays to save power 
+// Parameters    : none
+// Return value  : none
+//
+//================================================================================================================
+void checkPIR()
+{
+  //-------------------------------------------------------------
+  // Read PIR input, check for movement
+  // Only check for PIR activity if user option is '1' 
+  // AND only every second to prevent waisted processor time.
+  if( POWERSAVE_BY_PIR == 1 && (millis() - previousTimePIR > 1000) )
+  {
+    // reset the 'once-per-second timer
+    previousTimePIR = millis();
+
+    // read the PIR detector PIN
+    pirActivity = digitalRead(PIRDETECTORPIN);
+
+     // turn displays ON or OFF depending on state of pin 'pirActivity'
+    if(pirActivity == 1)
+    {
+      // PIR activity detected...
+      // Reset the PIR timer variable (in <tasksEveryMinue> function) every time
+      // the PIR is activated so effectually resetting the shut-off timer.
+      pirTimer = 0;
+
+      // only continue if the display is now OFF 
+      if(pirDisplaysState == 0)
+      {
+        // Toggle variable to prevent executing the following
+        // code every time the PIR detects activity
+        pirDisplaysState = 1;
+
+        //displays ON
+        turnDisplaysOn();
+      }      
+    }
+    else
+    {
+      // No PIR activity detected so check the pirTimer counter in the <tasksEveryMinue> function). 
+      // and if the delaytime has passed, only continue if the displays are now ON 
+      // else this code would be executed many times per second 
+      if(pirTimer > PIR_DELAY_TIME && pirDisplaysState == 1)
+      {
+        // Toggle variable to prevent executing the following
+        // code every time the PIR detects activity
+        pirDisplaysState = 0;
+      
+        //shut off displays
+        turnDisplaysOff();
+      }
+    }// else
+  }// if(POWERSAVE_BY_PIR == 1)
+}// void checkPIR()
 
 //================================================================================================================
 //
