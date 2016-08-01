@@ -1,4 +1,4 @@
- DCF77 Analyzer / Clock
+ DCF77 Analyzer/Clock v2.0
 
 
  This sketch is free software; you can redistribute it and/or
@@ -14,18 +14,11 @@
  You should have received a copy of the GNU Lesser General Public
  License along with this library; if not, write to the Free Software
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- 
- 
- The C++ code is far from optimized because I myself am an Arduino and C++ novice.
+
+
+ This C++ code is far from optimized because I myself am an Arduino and C++ novice.
  But even after learning some more now, I want to keep the code simpel and readable.
  That is why I maybe over-documented the code to help understand what's going on.
-
- HELP WANTED: 
- I'm not experienced enough to get to the point where the second-tick
- of the Real Time Clock display is exactly in sync with the DCF pulse.
- Now there's a small time lag.
- If you have a solution, please let me know! 
- 
 
  Erik de Ruiter
  2014-2016
@@ -34,9 +27,20 @@
 
  May 2014 First version
  March 2016 - big overhaul...
+ July 2016 - Start with building the v2.0 Clock and adapting the sketch
 
+ Version 2.0 - August 2016
+ - This sketch is adapted for my 2.0 version of the DCF/Analyzer Clock. It used the Arduino MEGA and the DCF Superfilter
+   by default and to drive the many seperate LED's I now use the ports of an Arduino Mega instead of a Maxim 7219 chip. 
+   This is because driving LED's with many different Voltage/Current specs is problematic with the Maxim chip. 
+   Lighting additional LED's for expample will influence (dim) the LED's already on. As I'm not an electronics engineer
+   my only solution was to use the extra ports of the Arduino Mega. Ofcourse you can use transistors or extra chips to
+   drive the LED's but for me this was the obvious solution.
+ - Removed all the code to use Maxim 72xx chips with Common Anode displays
 
- Version 1.72
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+
+ Version 1.72 - May 2016
  - Option: Use a cheap Ebay PIR detector to shut off selectable display's when no activity is detected. 
    The switch off delay can be set by the user to prevent the display shutting of if a person
    is not moving but the display should be on.
@@ -77,8 +81,8 @@
    can now be configured somewhat easier by editing two variables POWERSAVINGONTIME and POWERSAVINGOFFTIME.
  - changed some variable names:
    - Maxim instances 'lc' and 'lc1' are now MaximCC and MaximCA
-   - Display description MaximDcfTime is now MaximTemperature 
-   - DCF77SOUNDPIN is now BUZZERPIN
+   - Display description MaximDcfTime is now DisplayTempWeek 
+   - DCF77SOUNDPIN is now BUZZERSWITCHPIN
  - LED/Display test after power up now build in
  
 
@@ -128,7 +132,7 @@
     The only thing is you can't see it... ;)
 
   DCF beep:
-    With a switch, connected to pin BUZZERPIN, you can hear the received DCF bits coming in. 
+    With a switch, connected to pin BUZZERSWITCHPIN, you can hear the received DCF bits coming in. 
     The tone duration is equivalent to pulse width of the DCF bits, so either 100 or 200 ms.
   
   Miscelleanous:
