@@ -1710,7 +1710,7 @@ void displayData(void)
   }
 
   // display Leap Year LED
-  if (leapYear = 1)  
+  if (leapYear == 1)  
   {
     digitalWrite(LED_LEAPYEAR, HIGH);
   } 
